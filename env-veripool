@@ -1,0 +1,92 @@
+#!/bin/bash
+#%# Veripool Environment
+#
+# Copyright 2013 Robert Newgard
+#
+# This file is part of SyscMake.
+#
+# SyscMake is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# SyscMake is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with SyscMake.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
+VERIPOOL_DIR="/opt/Veripool"
+SYSTEMC_DIR="/opt/systemc/2.3.0"
+ECHO_ARGS=0
+#
+PROG=${0##*/}
+#
+function prepend_path ()
+{
+    EV_REF=$1
+    EV_VAL=$2
+    #
+    if [ -z "${!EV_REF}" ] ; then
+        export "${EV_REF}"="$EV_VAL"
+    else
+        export "${EV_REF}"="$EV_VAL:${!EV_REF}"
+    fi
+}
+#
+function show_export ()
+{
+    EV_NAM=$1
+    EV_PAT=$(export -p | grep " $EV_NAM=" | sed 's/^[^"]*//')
+    #
+    if [ -z "$EV_PAT" ] ; then
+        printf "%-20s is undefined\n" $EV_NAM
+    else
+        printf "%-20s is %s\n" $EV_NAM "$EV_PAT"
+    fi
+}
+#
+if [ ! -d "${VERIPOOL_DIR}" ] ; then
+    echo "ERR: Directory not found: (${VERIPOOL_DIR})"
+    exit 1
+fi
+#
+if [ ! -d "${SYSTEMC_DIR}" ] ; then
+    echo "ERR: Directory not found: (${SYSTEMC_DIR})"
+    exit 1
+fi
+#
+export SYSTEMC_INCLUDE=$SYSTEMC_DIR/include
+export SYSTEMC_LIBDIR=$SYSTEMC_DIR/lib-linux64
+export SYSTEMC_CXX_FLAGS="-pthread -fPIC"
+#
+prepend_path PATH            $VERIPOOL_DIR/bin
+prepend_path LD_LIBRARY_PATH $SYSTEMC_LIBDIR
+prepend_path MANPATH         $VERIPOOL_DIR/share/man
+#
+if [ "$#" = 0 ] ; then
+    echo   "usage:"
+    echo   "  $PROG <Veripool-executable> <Veripool-parameters>"
+    echo   "  $PROG eval '<Veripool-executable> <Veripool-parameters>'"
+    echo
+    echo   "  exports environment variables"
+    printf "    %s\n" "$(show_export SYSTEMC_INCLUDE)"
+    printf "    %s\n" "$(show_export SYSTEMC_LIBDIR)"
+    printf "    %s\n" "$(show_export SYSTEMC_CXX_FLAGS)"
+    printf "    %s\n" "$(show_export PATH)"
+    printf "    %s\n" "$(show_export LD_LIBRARY_PATH)"
+    printf "    %s\n" "$(show_export MANPATH)"
+    echo
+    echo   "  use \"$PROG eval '...'\" to delay parameter expansion"
+    echo   "    e.g. $PROG eval 'echo \$SYSTEMC_INCLUDE'"
+else
+    if [ "ECHO_ARGS" != "0" ] ; then
+        echo $@
+    fi
+    #
+    $@
+fi
