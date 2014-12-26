@@ -333,6 +333,8 @@ define root-help-core
     @echo   "        depends on: $(ACCUM_PREREQ_SIM)" | $(FMT)
     @echo   "    clean - remove build results"
     @echo   "        depends on: $(ACCUM_PREREQ_CLEAN)" | $(FMT)
+    @echo   "    help"
+    @echo   "        depends on: $(ACCUM_PREREQ_HELP)" | $(FMT)
 endef
 
 define root-help-aux
